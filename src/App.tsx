@@ -17,7 +17,8 @@ export const App = () => {
   const [discoverableSeconds, setDiscoverableSeconds] = useState<number>(0);
 
   useEffect(() => {
-    scan().catch(() => {});
+    const interval = setInterval(() => scan().catch(() => {}), 5000);
+    return () => clearInterval(interval);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
