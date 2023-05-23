@@ -1,130 +1,80 @@
-import React, {useState} from 'react';
+import React, {useEffect, useState} from 'react';
 import {
-  StyleSheet,
-  View,
   Text,
   SafeAreaView,
-  Button,
   TouchableOpacity,
-  ScrollView,
-  TextInput,
+  FlatList,
+  StyleSheet,
 } from 'react-native';
-import {
-  enable,
-  discover,
-  discoverable,
-  ConnListener,
-  DvcListener,
-  connect,
-  send,
-  MsgListener,
-  disconnect,
-  isConnected,
-} from 'react-native-bluetooth-message';
+import useDevices from './hooks/useDevices';
+import {Header} from './components';
+import DeviceItem from './components/DeviceItem';
+import {DateTime, Interval} from 'luxon';
 
-function renderDeviceList() {
-  let dvcList: String[] = [];
-  return Object.entries(DvcListener()).map(([_, dvc]) => {
-    return Object.entries(dvc).map(([name, addr]) => {
-      if (dvcList.includes(name)) {
-        return <></>;
-      } else {
-        dvcList.push(name);
-      }
-      return (
-        <TouchableOpacity
-          onPress={() => {
-            connect(addr);
-          }}
-          style={{
-            backgroundColor: '#212121',
-            marginVertical: 8,
-            marginHorizontal: 10,
-            padding: 20,
-            borderRadius: 10,
-          }}
-          key={addr}>
-          <Text>{name}</Text>
-        </TouchableOpacity>
-      );
-    });
-  });
-}
+export const App = () => {
+  const {devices, scan, enable, discoverable, discoverableUntil} = useDevices();
 
-export default function App() {
-  const [msgTxt, setMsgTxt] = useState<string>('');
+  const [discoverableSeconds, setDiscoverableSeconds] = useState<number>(0);
+
+  useEffect(() => {
+    scan().catch(() => {});
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      const seconds = discoverableUntil
+        ? Interval.fromDateTimes(
+            DateTime.now(),
+            DateTime.fromJSDate(discoverableUntil),
+          ).length('seconds')
+        : 0;
+      setDiscoverableSeconds(!Number.isNaN(seconds) ? seconds : -1);
+    }, 1000);
+    return () => {
+      clearInterval(interval);
+    };
+  }, [discoverableUntil]);
+
   return (
     <SafeAreaView>
-      <ScrollView>
-        <View style={styles.alignCenter}>
-          <Text style={styles.heading}>Bluetooth Message Example App</Text>
-          <Text>Connection Status : {ConnListener()}</Text>
-          <View>
-            <Button
-              title="Enable"
-              onPress={async () => {
-                enable().then(btState => {
-                  console.info(btState);
-                });
-              }}
-            />
-            <Button
-              title="discoverable"
-              onPress={async () => {
-                discoverable(15).then(discoverability => {
-                  console.info(discoverability);
-                });
-              }}
-            />
-            <Button
-              title="discover"
-              onPress={async () => {
-                discover().catch(err => {
-                  console.log('ok', err);
-                });
-              }}
-            />
-          </View>
-        </View>
-        {renderDeviceList()}
-        <View>
-          <TextInput
-            placeholder="Type your message"
-            onChangeText={(newText: any) => setMsgTxt(newText)}
-            value={msgTxt}
+      <Header>
+        <TouchableOpacity onPress={enable}>
+          <Text>Start</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          disabled={discoverableSeconds > 0}
+          onPress={discoverable}>
+          <Text>
+            {discoverableSeconds > 0
+              ? `Visible for ${discoverableSeconds.toFixed(0)} seconds`
+              : 'Make Visible'}
+          </Text>
+        </TouchableOpacity>
+      </Header>
+      <FlatList
+        data={Object.entries(devices)}
+        style={styles.list}
+        renderItem={({item: [name, address]}) => (
+          <DeviceItem
+            style={styles.device}
+            name={name}
+            address={address}
+            onPress={() => {}}
           />
-          <Button
-            title="Send"
-            onPress={() => {
-              send(msgTxt);
-            }}
-          />
-        </View>
-        <Text>{MsgListener()}</Text>
-        <Button
-          title="Disconnect"
-          onPress={() => {
-            disconnect();
-          }}
-        />
-        <Button
-          title="is Connected"
-          onPress={() => {
-            isConnected().then(isCon => {
-              console.log(isCon);
-            });
-          }}
-        />
-      </ScrollView>
+        )}
+      />
     </SafeAreaView>
   );
-}
+};
 
 const styles = StyleSheet.create({
-  heading: {
-    fontSize: 40,
+  device: {
+    marginVertical: 8,
   },
-  alignCenter: {
-    alignItems: 'center',
+  list: {
+    padding: 16,
   },
 });
+
+export default App;
