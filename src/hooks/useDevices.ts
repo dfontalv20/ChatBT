@@ -9,7 +9,7 @@ import {DateTime} from 'luxon';
 
 export type DeviceDict = Record<string, string>;
 
-const DISCOVERABLE_SECONDS = 10;
+const DISCOVERABLE_SECONDS = 30;
 
 export const useDevices = () => {
   const [discoverableUntil, setDiscoverableUntil] = useState<Date | null>(null);

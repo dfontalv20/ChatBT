@@ -2,12 +2,13 @@ import React, {PropsWithChildren} from 'react';
 import {StyleProp, View, ViewStyle} from 'react-native';
 
 const styles: StyleProp<ViewStyle> = {
-  height: 40,
+  height: 60,
   display: 'flex',
   backgroundColor: 'blue',
   flexDirection: 'row',
   alignItems: 'center',
-  justifyContent: 'flex-end',
+  justifyContent: 'space-around',
+  width: '100%',
   gap: 10,
   paddingHorizontal: 8,
 };
