@@ -50,12 +50,6 @@ const useChat = () => {
   const status = ConnListener() as ConnectionStatus;
 
   useEffect(() => {
-    if (status !== 'CONNECTED') {
-      setConnectedDevice(null);
-    }
-  }, [status, setConnectedDevice]);
-
-  useEffect(() => {
     if (lastMessage === 'NO_MSG') {
       return;
     }
